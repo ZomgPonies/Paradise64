@@ -246,6 +246,13 @@ var/icons_converted=0
 				icons_converted++
 				world<<"icons [choice]x[choice] converted = [icons_converted]"
 				sleep(world.tick_lag)
+			else if(Get_Width(dmi)==choice)
+				dmi=Scaled_Icon(dmi,choice * 2, Get_Height(dmi) * 2)
+				fcopy(dmi,d+f)
+				icons_converted++
+				world<<"icons [choice]x[choice] converted = [icons_converted]"
+				world << "iconfile [d+f] uses [Get_Width(dmi)] by [Get_Height(dmi)]."
+				sleep(world.tick_lag)
 
 proc/Scaled_Icon(O,X,Y)
 	var/icon/I=new(O)
