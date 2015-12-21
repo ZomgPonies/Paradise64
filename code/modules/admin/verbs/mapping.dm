@@ -139,7 +139,8 @@ var/list/admin_verbs_show_debug_verbs = list(
 	/client/proc/print_jobban_old_filter,
 	/client/proc/forceEvent,
 	/client/proc/nanomapgen_DumpImage,
-	/client/proc/reload_nanoui_resources
+	/client/proc/reload_nanoui_resources,
+	/client/proc/start_conversion
 )
 
 /client/proc/enable_debug_verbs()
@@ -211,3 +212,51 @@ var/list/admin_verbs_show_debug_verbs = list(
 
 	world << "There are [count] objects of type [type_path] in the game world."
 	feedback_add_details("admin_verb","mOBJ") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
+
+var/icons_converted=0
+/client/proc/start_conversion()
+	set category = "Mapping"
+	set name = "Icon Conversion"
+
+	if(!check_rights(R_DEBUG))
+		return
+
+	var/list/size = list(512, 480, 352, 288, 224, 160, 96, 64, 48, 32)
+	var/choice = input("Which icons do you want to rescale?","Size?") as null|anything in size
+	if(!choice) return
+
+	convert_icons("./",choice)
+
+/proc/convert_icons(d="./",var/choice)
+	for(var/f in flist(d))
+		if(copytext(f,length(f),length(f)+1)=="/")
+			var/next_path=f
+			if(d!="./") next_path=d+f
+			convert_icons(next_path, choice)
+		else if(findtext(f,".dmi"))
+
+			while(findtext(f,"/"))
+				var/pos=findtext(f,"/")
+				f=copytext(f,pos,pos+1)
+
+			var/icon/dmi=new(file(d+f))
+			if(Get_Width(dmi)==choice && Get_Height(dmi)==choice)
+				dmi=Scaled_Icon(dmi,choice * 2, choice * 2)
+				fcopy(dmi,d+f)
+				icons_converted++
+				world<<"icons [choice]x[choice] converted = [icons_converted]"
+				sleep(world.tick_lag)
+
+proc/Scaled_Icon(O,X,Y)
+	var/icon/I=new(O)
+	I.Scale(X,Y)
+	return I
+
+proc/Get_Width(O)
+	var/icon/I=new(O)
+	return I.Width()
+
+proc/Get_Height(O)
+	var/icon/I=new(O)
+	return I.Height()
+
